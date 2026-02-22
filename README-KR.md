@@ -1,6 +1,6 @@
 # claude-code-api
 
-Claude Code 자동화 엔진 HTTP API. \
+Claude Code 에이전트 HTTP API. \
 Agent SDK를 통해 Claude Code CLI 에이전트를 워커 풀, 큐, 멀티턴 세션으로 운영합니다.
 
 ## 아키텍처
@@ -22,7 +22,7 @@ docker run -d -p 8080:8080 \
   -e NEXTAUTH_SECRET=your-secret \
   -e API_KEYS=sk-my-secret-key \
   -v claude-auth:/home/node/.claude \
-  -v automation-home:/home/node/users \
+  -v agent-home:/home/node/users \
   ghcr.io/exitxio/claude-code-api:latest
 ```
 
@@ -113,8 +113,8 @@ curl -X POST http://localhost:8080/run \
 | `NEXTAUTH_SECRET` | **필수** | HMAC 토큰 검증 시크릿 |
 | `API_KEYS` | — | 쉼표로 구분된 API 키 (인증 섹션 참고) |
 | `CLAUDE_MODEL` | `claude-sonnet-4-6` | 사용할 Claude 모델 |
-| `AUTOMATION_POOL_SIZE` | `1` | 사전 워밍 워커 수 |
-| `AUTOMATION_PORT` | `8080` | 서버 포트 |
+| `POOL_SIZE` | `1` | 사전 워밍 워커 수 |
+| `PORT` | `8080` | 서버 포트 |
 | `USE_CLAUDE_API_KEY` | — | `1`로 설정 시 OAuth 대신 `ANTHROPIC_API_KEY` 사용 |
 
 ## Claude 인증

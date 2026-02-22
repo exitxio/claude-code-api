@@ -1,6 +1,6 @@
 # claude-code-api
 
-Claude Code automation engine as an HTTP API. \
+Claude Code agent as an HTTP API. \
 Runs the Claude Code CLI agent via the Agent SDK with a worker pool, queue, and multi-turn sessions.
 
 ## Architecture
@@ -22,7 +22,7 @@ docker run -d -p 8080:8080 \
   -e NEXTAUTH_SECRET=your-secret \
   -e API_KEYS=sk-my-secret-key \
   -v claude-auth:/home/node/.claude \
-  -v automation-home:/home/node/users \
+  -v agent-home:/home/node/users \
   ghcr.io/exitxio/claude-code-api:latest
 ```
 
@@ -113,8 +113,8 @@ Response:
 | `NEXTAUTH_SECRET` | **required** | Secret for HMAC token verification |
 | `API_KEYS` | — | Comma-separated API keys (see Authentication) |
 | `CLAUDE_MODEL` | `claude-sonnet-4-6` | Claude model to use |
-| `AUTOMATION_POOL_SIZE` | `1` | Number of pre-warmed workers |
-| `AUTOMATION_PORT` | `8080` | Server port |
+| `POOL_SIZE` | `1` | Number of pre-warmed workers |
+| `PORT` | `8080` | Server port |
 | `USE_CLAUDE_API_KEY` | — | Set to `1` to use `ANTHROPIC_API_KEY` instead of OAuth |
 
 ## Claude Authentication

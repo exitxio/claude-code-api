@@ -3,7 +3,7 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
-import { AutomationQueue, QueueFullError } from "./queue";
+import { AgentQueue, QueueFullError } from "./queue";
 import type { RunRequest } from "./types";
 
 const MAX_PROMPT_LENGTH = 200_000;
@@ -119,11 +119,11 @@ function getBearerToken(req: IncomingMessage): string | null {
   return auth.slice(7);
 }
 
-export class AutomationHttpHandler {
-  private readonly queue: AutomationQueue;
+export class AgentHttpHandler {
+  private readonly queue: AgentQueue;
   private readonly secret: string;
 
-  constructor(queue: AutomationQueue) {
+  constructor(queue: AgentQueue) {
     this.queue = queue;
     const secret = process.env.NEXTAUTH_SECRET;
     if (!secret) {
@@ -281,7 +281,7 @@ export class AutomationHttpHandler {
       if (err instanceof QueueFullError) {
         json(res, 429, { error: "Queue is full, try again later" });
       } else {
-        console.error("[Automation] Run error:", err);
+        console.error("[Agent] Run error:", err);
         json(res, 500, { error: "Internal server error" });
       }
     }
@@ -310,7 +310,7 @@ export class AutomationHttpHandler {
       fs.writeFileSync(filePath, parsed.content ?? "");
       json(res, 200, { saved: true });
     } catch (err) {
-      console.error("[Automation] Failed to write CLAUDE.md:", err);
+      console.error("[Agent] Failed to write CLAUDE.md:", err);
       json(res, 500, { error: "Failed to save file" });
     }
   }

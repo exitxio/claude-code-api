@@ -1,4 +1,4 @@
-import { AutomationWorker } from "./worker";
+import { AgentWorker } from "./worker";
 import type { RunRequest, RunResult } from "./types";
 
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
@@ -11,7 +11,7 @@ interface PendingItem {
 }
 
 interface SessionEntry {
-  worker: AutomationWorker;
+  worker: AgentWorker;
   startPromise: Promise<void>;
   lastActivity: number;
   pending: PendingItem[];
@@ -33,7 +33,7 @@ export class SessionManager {
       if (this.sessions.size >= MAX_SESSIONS) {
         throw new Error("Too many active sessions (max 20)");
       }
-      const worker = new AutomationWorker(`ses-${sessionId.slice(0, 8)}`, userId);
+      const worker = new AgentWorker(`ses-${sessionId.slice(0, 8)}`, userId);
       const startPromise = worker.start();
       entry = {
         worker,

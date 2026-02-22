@@ -31,7 +31,7 @@ function findClaudeExecutable(): string {
   }) || "claude";
 }
 
-export class AutomationWorker {
+export class AgentWorker {
   readonly id: string;
   private _state: WorkerState = "initializing";
   private busySince?: number;
@@ -75,7 +75,7 @@ export class AutomationWorker {
     }
 
     const claudeExe = findClaudeExecutable();
-    console.log(`[Automation] Worker ${this.id}: model=${CLAUDE_MODEL} exe=${claudeExe} cwd=${this.projectDir}`);
+    console.log(`[Agent] Worker ${this.id}: model=${CLAUDE_MODEL} exe=${claudeExe} cwd=${this.projectDir}`);
 
     if (process.env.NODE_ENV === "production") {
       const fs = require("fs");
@@ -106,10 +106,10 @@ export class AutomationWorker {
     try {
       await this._warmup();
       this._state = "ready";
-      console.log(`[Automation] Worker ${this.id} ready (warm)`);
+      console.log(`[Agent] Worker ${this.id} ready (warm)`);
     } catch (err) {
       this._state = "error";
-      console.error(`[Automation] Worker ${this.id} warmup failed:`, err);
+      console.error(`[Agent] Worker ${this.id} warmup failed:`, err);
       throw err;
     }
   }
@@ -204,6 +204,6 @@ export class AutomationWorker {
       this.session?.close();
     } catch {}
     this.session = null;
-    console.log(`[Automation] Worker ${this.id} disposed`);
+    console.log(`[Agent] Worker ${this.id} disposed`);
   }
 }
