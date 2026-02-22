@@ -15,13 +15,26 @@ Claude Code CLI (agent execution)
 
 ## Quick Start
 
+### Docker image (recommended)
+
+```bash
+docker run -d -p 8080:8080 \
+  -e NEXTAUTH_SECRET=your-secret \
+  -e API_KEYS=sk-my-secret-key \
+  -v claude-auth:/home/node/.claude \
+  -v automation-home:/home/node/users \
+  ghcr.io/exitxio/claude-code-api:latest
+```
+
+### docker-compose
+
 ```bash
 git clone https://github.com/exitxio/claude-code-api.git
 cd claude-code-api
 cp .env.example .env
 # Edit .env — set NEXTAUTH_SECRET and API_KEYS
 
-docker compose up --build
+docker compose up
 ```
 
 Health check:
