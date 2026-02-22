@@ -124,6 +124,65 @@ By default, the server uses Claude OAuth (subscription-based). Credentials are s
 
 **Option B: API key** — Set `ANTHROPIC_API_KEY` and `USE_CLAUDE_API_KEY=1` in environment.
 
+## Standalone Deployment
+
+Deploy the API server independently with port 8080 exposed. Useful for bots, CI pipelines, or any external integration.
+
+```bash
+docker run -d -p 8080:8080 \
+  -e API_KEYS=sk-my-secret-key \
+  -v claude-auth:/home/node/.claude \
+  -v agent-home:/home/node/users \
+  ghcr.io/exitxio/claude-code-api:latest
+```
+
+Or with the included `docker-compose.yml` (port 8080 is exposed by default):
+
+```bash
+git clone https://github.com/exitxio/claude-code-api.git
+cd claude-code-api
+# Set API_KEYS in docker-compose.yml or .env
+docker compose up -d
+```
+
+### Usage with curl
+
+Health check (no auth required):
+```bash
+curl http://localhost:8080/health
+```
+
+Single-shot prompt:
+```bash
+curl -X POST http://localhost:8080/run \
+  -H "x-api-key: sk-my-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "What is 2+2?"}'
+# {"success":true,"output":"Four.","durationMs":1116,"timedOut":false}
+```
+
+Multi-turn conversation (use the same `sessionId`):
+```bash
+curl -X POST http://localhost:8080/run \
+  -H "x-api-key: sk-my-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "My name is Alice.", "sessionId": "session-1"}'
+
+curl -X POST http://localhost:8080/run \
+  -H "x-api-key: sk-my-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "What is my name?", "sessionId": "session-1"}'
+# {"success":true,"output":"Your name is Alice.","durationMs":...}
+```
+
+Check status:
+```bash
+curl http://localhost:8080/status \
+  -H "x-api-key: sk-my-secret-key"
+```
+
+> **Note:** When used with [claude-code-web](https://github.com/exitxio/claude-code-web), the API port is not exposed externally — communication happens over the internal Docker network.
+
 ## Use with claude-code-web
 
 In your `claude-code-web` `docker-compose.yml`, the `api` service uses this image:

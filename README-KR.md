@@ -124,6 +124,65 @@ curl -X POST http://localhost:8080/run \
 
 **방법 B: API 키** — 환경변수에 `ANTHROPIC_API_KEY`와 `USE_CLAUDE_API_KEY=1` 설정.
 
+## 단독 배포
+
+API 서버를 독립적으로 배포하여 8080 포트를 외부에 노출합니다. 봇, CI 파이프라인 등 외부 연동에 적합합니다.
+
+```bash
+docker run -d -p 8080:8080 \
+  -e API_KEYS=sk-my-secret-key \
+  -v claude-auth:/home/node/.claude \
+  -v agent-home:/home/node/users \
+  ghcr.io/exitxio/claude-code-api:latest
+```
+
+또는 포함된 `docker-compose.yml`로 실행 (기본 8080 포트 노출):
+
+```bash
+git clone https://github.com/exitxio/claude-code-api.git
+cd claude-code-api
+# docker-compose.yml 또는 .env에 API_KEYS 설정
+docker compose up -d
+```
+
+### curl 사용법
+
+헬스체크 (인증 불필요):
+```bash
+curl http://localhost:8080/health
+```
+
+단발성 프롬프트:
+```bash
+curl -X POST http://localhost:8080/run \
+  -H "x-api-key: sk-my-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "2+2는?"}'
+# {"success":true,"output":"4입니다.","durationMs":1116,"timedOut":false}
+```
+
+멀티턴 대화 (동일 `sessionId` 사용):
+```bash
+curl -X POST http://localhost:8080/run \
+  -H "x-api-key: sk-my-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "내 이름은 Alice야.", "sessionId": "session-1"}'
+
+curl -X POST http://localhost:8080/run \
+  -H "x-api-key: sk-my-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "내 이름이 뭐야?", "sessionId": "session-1"}'
+# {"success":true,"output":"이름은 Alice입니다.","durationMs":...}
+```
+
+상태 확인:
+```bash
+curl http://localhost:8080/status \
+  -H "x-api-key: sk-my-secret-key"
+```
+
+> **참고:** [claude-code-web](https://github.com/exitxio/claude-code-web)과 함께 사용할 경우 API 포트는 외부에 노출되지 않으며, Docker 내부 네트워크로 통신합니다.
+
 ## claude-code-web과 함께 사용
 
 `claude-code-web`의 `docker-compose.yml`에서 `api` 서비스가 이 이미지를 사용합니다:
