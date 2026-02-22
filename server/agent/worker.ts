@@ -1,6 +1,7 @@
 import {
   unstable_v2_createSession,
   type SDKSession,
+  type SDKSessionOptions,
   type SDKResultMessage,
   type SDKResultSuccess,
 } from "@anthropic-ai/claude-agent-sdk";
@@ -95,13 +96,15 @@ export class AgentWorker {
       }
     }
 
-    this.session = unstable_v2_createSession({
+    // cwd is supported at runtime but not yet declared in SDKSessionOptions (alpha API)
+    const sessionOptions: SDKSessionOptions & { cwd?: string } = {
       model: CLAUDE_MODEL,
       pathToClaudeCodeExecutable: claudeExe,
       permissionMode: "bypassPermissions",
       cwd: this.projectDir,
       env,
-    });
+    };
+    this.session = unstable_v2_createSession(sessionOptions as SDKSessionOptions);
 
     try {
       await this._warmup();
