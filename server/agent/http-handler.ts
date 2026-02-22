@@ -47,28 +47,6 @@ function userClaudePath(userId: string): string {
   return path.join(USERS_BASE, sanitizeUserId(userId), "CLAUDE.md");
 }
 
-function verifyToken(token: string, secret: string): { valid: boolean; username?: string } {
-  try {
-    const decoded = Buffer.from(token, "base64").toString();
-    const [username, timestampStr, hmac] = decoded.split(":");
-    const timestamp = parseInt(timestampStr, 10);
-
-    if (Date.now() - timestamp > 5 * 60 * 1000) {
-      return { valid: false };
-    }
-
-    const data = `${username}:${timestamp}`;
-    const expectedHmac = crypto.createHmac("sha256", secret).update(data).digest("hex");
-
-    if (hmac === expectedHmac) {
-      return { valid: true, username };
-    }
-    return { valid: false };
-  } catch {
-    return { valid: false };
-  }
-}
-
 // --- API Key authentication ---
 // API_KEYS env var: comma-separated list of valid keys
 // Key format: "secretkey" (userId defaults to "api") or "prefix:secretkey" (userId = prefix)
@@ -113,23 +91,11 @@ function readBody(req: IncomingMessage): Promise<string> {
   });
 }
 
-function getBearerToken(req: IncomingMessage): string | null {
-  const auth = req.headers.authorization;
-  if (!auth?.startsWith("Bearer ")) return null;
-  return auth.slice(7);
-}
-
 export class AgentHttpHandler {
   private readonly queue: AgentQueue;
-  private readonly secret: string;
 
   constructor(queue: AgentQueue) {
     this.queue = queue;
-    const secret = process.env.NEXTAUTH_SECRET;
-    if (!secret) {
-      throw new Error("NEXTAUTH_SECRET is required. Set it in .env or environment variables.");
-    }
-    this.secret = secret;
   }
 
   async handle(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
@@ -215,7 +181,7 @@ export class AgentHttpHandler {
   }
 
   private authenticate(req: IncomingMessage, res: ServerResponse): string | null {
-    // 1) Try API key (x-api-key header)
+    // API Key authentication (x-api-key header)
     const apiKey = req.headers["x-api-key"] as string | undefined;
     if (apiKey) {
       const result = verifyApiKey(apiKey);
@@ -224,20 +190,10 @@ export class AgentHttpHandler {
       return null;
     }
 
-    // 2) Try HMAC bearer token
-    const token = getBearerToken(req);
-    if (!token) {
-      json(res, 401, { error: "Missing authorization token" });
-      return null;
-    }
-
-    const result = verifyToken(token, this.secret);
-    if (!result.valid) {
-      json(res, 401, { error: "Invalid or expired token" });
-      return null;
-    }
-
-    return result.username || "anonymous";
+    // userId from request body (for requests from ark that pass userId in body)
+    // For non-body requests, fall back to "api" default
+    json(res, 401, { error: "Missing API key" });
+    return null;
   }
 
   private async handleRun(req: IncomingMessage, res: ServerResponse, userId: string): Promise<void> {
@@ -249,7 +205,7 @@ export class AgentHttpHandler {
       return;
     }
 
-    let parsed: RunRequest;
+    let parsed: RunRequest & { userId?: string };
     try {
       parsed = JSON.parse(body);
     } catch {
@@ -267,9 +223,12 @@ export class AgentHttpHandler {
       return;
     }
 
-    console.log(`[Run] userId=${userId} sessionId=${parsed.sessionId ?? "none"} promptLen=${parsed.prompt.length}`);
+    // body의 userId가 있으면 그것을 사용, 없으면 API Key에서 추출된 userId 사용
+    const effectiveUserId = parsed.userId || userId;
+
+    console.log(`[Run] userId=${effectiveUserId} sessionId=${parsed.sessionId ?? "none"} promptLen=${parsed.prompt.length}`);
     try {
-      const result = await this.queue.run({ ...parsed, userId });
+      const result = await this.queue.run({ ...parsed, userId: effectiveUserId });
       json(res, 200, {
         success: result.success,
         output: result.output,

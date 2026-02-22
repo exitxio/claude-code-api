@@ -1,13 +1,12 @@
 services:
   api:
-    container_name: claude-code-api
+    container_name: exitx-ccapi
     build: .
     ports:
       - "${PORT:-8080}:8080"
     restart: always
     environment:
       - NODE_ENV=production
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - API_KEYS=${API_KEYS:-}
       - POOL_SIZE=${POOL_SIZE:-2}
       - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-sonnet-4-6}
