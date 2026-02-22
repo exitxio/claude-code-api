@@ -1,0 +1,25 @@
+services:
+  api:
+    build: .
+    ports:
+      - "${PORT:-8080}:8080"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - API_KEYS=${API_KEYS:-}
+      - AUTOMATION_POOL_SIZE=${AUTOMATION_POOL_SIZE:-1}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-sonnet-4-6}
+    volumes:
+      - claude-auth:/home/node/.claude
+      - automation-home:/home/node/users
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  claude-auth:
+  automation-home:
