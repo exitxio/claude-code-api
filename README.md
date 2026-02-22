@@ -31,9 +31,8 @@ docker run -d -p 8080:8080 \
 ```bash
 git clone https://github.com/exitxio/claude-code-api.git
 cd claude-code-api
-cp .env.example .env
-# Edit .env — set NEXTAUTH_SECRET and API_KEYS
 
+# Set required env vars in docker-compose.yml or .env
 docker compose up
 ```
 
@@ -142,7 +141,7 @@ See the [claude-code-web README](https://github.com/exitxio/claude-code-web) for
 
 ```bash
 pnpm install
-cp .env.example .env.local
+# Set env vars (NEXTAUTH_SECRET, etc.)
 pnpm dev
 ```
 

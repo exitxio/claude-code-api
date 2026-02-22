@@ -1,10 +1,6 @@
 import { createServer } from "http";
-import { config } from "dotenv";
 import { AgentQueue } from "./agent/queue";
 import { AgentHttpHandler } from "./agent/http-handler";
-
-config({ path: ".env.local" });
-config({ path: ".env" });
 
 process.on("unhandledRejection", (reason) => {
   console.error("[Agent] Unhandled rejection:", reason);

@@ -31,9 +31,8 @@ docker run -d -p 8080:8080 \
 ```bash
 git clone https://github.com/exitxio/claude-code-api.git
 cd claude-code-api
-cp .env.example .env
-# .env 편집 — NEXTAUTH_SECRET, API_KEYS 설정
 
+# docker-compose.yml 또는 .env에 환경변수 설정
 docker compose up
 ```
 
@@ -142,7 +141,7 @@ services:
 
 ```bash
 pnpm install
-cp .env.example .env.local
+# 환경변수 설정 (NEXTAUTH_SECRET 등)
 pnpm dev
 ```
 
