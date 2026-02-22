@@ -15,7 +15,40 @@ Claude Code CLI (agent execution)
 
 ## Quick Start
 
-### Docker image (recommended)
+### 1. Configure environment
+
+```bash
+git clone https://github.com/exitxio/claude-code-api.git
+cd claude-code-api
+cp .env.example .env
+# Edit .env — set NEXTAUTH_SECRET (required)
+```
+
+Generate a secret:
+```bash
+openssl rand -base64 32
+```
+
+### 2. Run with Docker Compose
+
+```bash
+pnpm docker:up
+```
+
+| Script | Command |
+|--------|---------|
+| `pnpm docker:up` | Build & start containers |
+| `pnpm docker:down` | Stop containers |
+| `pnpm docker:logs` | Follow container logs |
+| `pnpm docker:prod` | Start with pre-built GHCR image |
+
+### 3. Health check
+
+```bash
+curl http://localhost:8080/health
+```
+
+### Docker image (standalone)
 
 ```bash
 docker run -d -p 8080:8080 \
@@ -24,21 +57,6 @@ docker run -d -p 8080:8080 \
   -v claude-auth:/home/node/.claude \
   -v agent-home:/home/node/users \
   ghcr.io/exitxio/claude-code-api:latest
-```
-
-### docker-compose
-
-```bash
-git clone https://github.com/exitxio/claude-code-api.git
-cd claude-code-api
-
-# Set required env vars in docker-compose.yml or .env
-docker compose up
-```
-
-Health check:
-```bash
-curl http://localhost:8080/health
 ```
 
 ## Authentication
@@ -113,7 +131,7 @@ Response:
 | `API_KEYS` | — | Comma-separated API keys (see Authentication) |
 | `CLAUDE_MODEL` | `claude-sonnet-4-6` | Claude model to use |
 | `POOL_SIZE` | `1` | Number of pre-warmed workers |
-| `PORT` | `8080` | Server port |
+| `PORT` | `8080` | Host port mapping |
 | `USE_CLAUDE_API_KEY` | — | Set to `1` to use `ANTHROPIC_API_KEY` instead of OAuth |
 
 ## Claude Authentication
@@ -124,28 +142,55 @@ By default, the server uses Claude OAuth (subscription-based). Credentials are s
 
 **Option B: API key** — Set `ANTHROPIC_API_KEY` and `USE_CLAUDE_API_KEY=1` in environment.
 
-## Standalone Deployment
+## Networking with claude-code-web
 
-Deploy the API server independently with port 8080 exposed. Useful for bots, CI pipelines, or any external integration.
+claude-code-api and claude-code-web run as **separate** Docker Compose stacks, connected via a shared Docker network.
 
-```bash
-docker run -d -p 8080:8080 \
-  -e API_KEYS=sk-my-secret-key \
-  -v claude-auth:/home/node/.claude \
-  -v agent-home:/home/node/users \
-  ghcr.io/exitxio/claude-code-api:latest
+```
+claude-code-api (port 8080)  ──┐
+                                ├── exitx network
+claude-code-web (port 3000)  ──┘
 ```
 
-Or with the included `docker-compose.yml` (port 8080 is exposed by default):
+**claude-code-api** creates and owns the `exitx` network:
 
-```bash
-git clone https://github.com/exitxio/claude-code-api.git
-cd claude-code-api
-# Set API_KEYS in docker-compose.yml or .env
-docker compose up -d
+```yaml
+# claude-code-api/docker-compose.yml
+networks:
+  exitx:
+    name: exitx
+    driver: bridge
 ```
 
-### Usage with curl
+**claude-code-web** joins as external:
+
+```yaml
+# claude-code-web/docker-compose.yml
+services:
+  web:
+    environment:
+      - AUTOMATION_SERVER_URL=http://claude-code-api:8080
+    networks:
+      - exitx
+
+networks:
+  exitx:
+    external: true
+```
+
+**Start order:** api first, then web.
+
+```bash
+# 1. Start API
+cd claude-code-api && pnpm docker:up
+
+# 2. Start Web
+cd claude-code-web && pnpm docker:up
+```
+
+## Standalone Usage
+
+### curl examples
 
 Health check (no auth required):
 ```bash
@@ -181,20 +226,13 @@ curl http://localhost:8080/status \
   -H "x-api-key: sk-my-secret-key"
 ```
 
-> **Note:** When used with [claude-code-web](https://github.com/exitxio/claude-code-web), the API port is not exposed externally — communication happens over the internal Docker network.
+## Production
 
-## Use with claude-code-web
+Use `docker-compose.prod.yml` for production deployment with resource limits and log rotation:
 
-In your `claude-code-web` `docker-compose.yml`, the `api` service uses this image:
-
-```yaml
-services:
-  api:
-    image: ghcr.io/exitxio/claude-code-api:latest
-    # ...
+```bash
+pnpm docker:prod
 ```
-
-See the [claude-code-web README](https://github.com/exitxio/claude-code-web) for the full setup.
 
 ## Development
 

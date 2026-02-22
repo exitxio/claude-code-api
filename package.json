@@ -4,7 +4,11 @@
   "private": true,
   "scripts": {
     "start": "tsx server/agent-server.ts",
-    "dev": "tsx watch server/agent-server.ts"
+    "dev": "tsx watch server/agent-server.ts",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:prod": "docker compose -f docker-compose.prod.yml up -d"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.49",
