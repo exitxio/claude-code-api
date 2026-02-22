@@ -142,9 +142,28 @@ Response:
 
 By default, the server uses Claude OAuth (subscription-based). Credentials are stored in a Docker volume (`claude-auth`).
 
-**Option A: OAuth (subscription)** — Use the `/auth/login` + `/auth/exchange` endpoints, or the claude-code-web UI.
+**Option A: OAuth (subscription)** — Use the claude-code-web UI, or authenticate directly via curl:
 
-**Option B: API key** — Set `ANTHROPIC_API_KEY` and `USE_CLAUDE_API_KEY=1` in environment.
+```bash
+# 1. Get OAuth URL
+curl -X POST http://localhost:8080/auth/login \
+  -H "x-api-key: YOUR_API_KEY"
+# → {"url":"https://claude.ai/oauth/authorize?..."}
+
+# 2. Open the URL in a browser → sign in → copy the code from the callback page
+#    (looks like: aBcDeFg...#xYz123...)
+
+# 3. Exchange the code for tokens
+curl -X POST http://localhost:8080/auth/exchange \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"code": "PASTE_THE_FULL_CODE#STATE_HERE"}'
+# → {"success":true}
+```
+
+Credentials persist in the `claude-auth` Docker volume. You only need to do this once.
+
+**Option B: API key (pay-per-token)** — Set `ANTHROPIC_API_KEY` and `USE_CLAUDE_API_KEY=1` in environment. No OAuth needed.
 
 ## Networking with claude-code-web
 

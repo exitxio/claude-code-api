@@ -4,12 +4,12 @@ services:
     build: .
     ports:
       - "${PORT:-8080}:8080"
-    restart: unless-stopped
+    restart: always
     environment:
       - NODE_ENV=production
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - API_KEYS=${API_KEYS:-}
-      - POOL_SIZE=${POOL_SIZE:-1}
+      - POOL_SIZE=${POOL_SIZE:-2}
       - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-sonnet-4-6}
     volumes:
       - claude-auth:/home/node/.claude
@@ -22,6 +22,19 @@ services:
       start_period: 60s
     networks:
       - exitx
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2"
+        reservations:
+          memory: 512M
+          cpus: "0.5"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   claude-auth:

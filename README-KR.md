@@ -142,9 +142,28 @@ curl -X POST http://localhost:8080/run \
 
 기본적으로 Claude OAuth(구독 기반)를 사용합니다. 자격증명은 Docker 볼륨(`claude-auth`)에 저장됩니다.
 
-**방법 A: OAuth (구독)** — `/auth/login` + `/auth/exchange` 엔드포인트 또는 claude-code-web UI 사용.
+**방법 A: OAuth (구독)** — claude-code-web UI를 사용하거나, curl로 직접 인증:
 
-**방법 B: API 키** — 환경변수에 `ANTHROPIC_API_KEY`와 `USE_CLAUDE_API_KEY=1` 설정.
+```bash
+# 1. OAuth URL 받기
+curl -X POST http://localhost:8080/auth/login \
+  -H "x-api-key: YOUR_API_KEY"
+# → {"url":"https://claude.ai/oauth/authorize?..."}
+
+# 2. 브라우저에서 URL 열기 → 로그인 → 콜백 페이지의 코드 복사
+#    (형식: aBcDeFg...#xYz123...)
+
+# 3. 코드를 토큰으로 교환
+curl -X POST http://localhost:8080/auth/exchange \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"code": "복사한_CODE#STATE_전체를_여기에"}'
+# → {"success":true}
+```
+
+자격증명은 `claude-auth` Docker 볼륨에 저장됩니다. 최초 1회만 하면 됩니다.
+
+**방법 B: API 키 (종량제)** — 환경변수에 `ANTHROPIC_API_KEY`와 `USE_CLAUDE_API_KEY=1` 설정. OAuth 불필요.
 
 ## claude-code-web과 네트워크 연결
 
