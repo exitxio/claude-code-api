@@ -71,13 +71,17 @@ docker run -d -p 8080:8080 \
 # 단순 키 — userId는 "api"로 기본 설정
 API_KEYS=sk-my-secret-key
 
-# 접두사 키 — userId가 접두사에서 파생
+# 접두사 키 — 접두사(prefix:key)가 userId로 사용됨
+# "myapp"과 "bot"이 각 키의 userId가 됨
 API_KEYS=myapp:sk-key1,bot:sk-key2
 ```
 
+> **주의:** `x-api-key` 헤더에는 **키 부분만** 보내야 합니다. 접두사는 env에서 키와 userId를 매핑하는 용도일 뿐, 요청 시에는 포함하지 않습니다.
+
 ```bash
+# API_KEYS=myapp:sk-key1 → sk-key1만 전송, myapp:sk-key1 아님
 curl -X POST http://localhost:8080/run \
-  -H "x-api-key: sk-my-secret-key" \
+  -H "x-api-key: sk-key1" \
   -H "Content-Type: application/json" \
   -d '{"prompt": "2+2는?"}'
 ```

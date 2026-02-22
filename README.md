@@ -71,13 +71,17 @@ Set `API_KEYS` env var with comma-separated keys:
 # Simple — userId defaults to "api"
 API_KEYS=sk-my-secret-key
 
-# Prefixed — userId derived from prefix
+# Prefixed — userId derived from prefix (prefix:key)
+# "myapp" and "bot" become the userId for each key
 API_KEYS=myapp:sk-key1,bot:sk-key2
 ```
 
+> **Note:** The `x-api-key` header takes **only the key part**, not the prefix. The prefix is only used in the env var to map keys to userIds.
+
 ```bash
+# If API_KEYS=myapp:sk-key1 → send sk-key1, not myapp:sk-key1
 curl -X POST http://localhost:8080/run \
-  -H "x-api-key: sk-my-secret-key" \
+  -H "x-api-key: sk-key1" \
   -H "Content-Type: application/json" \
   -d '{"prompt": "What is 2+2?"}'
 ```
